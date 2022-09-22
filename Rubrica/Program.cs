@@ -5,17 +5,7 @@ using System.Text.Json.Serialization;
 // serialize / serializza   = converti da Classe C# a stringa di testo JSON
 // deserialize/deserializza = converti da stringa di testo JSON a Classe C#
 
-IEnumerable<Contatto> contatti = File.ReadLines("rubrica.json")
-    .Select(linea =>
-    {
-        Contatto? contatto = JsonSerializer.Deserialize<Contatto>(linea);
-        if (contatto == null)
-        {
-            throw new Exception("JSON non valido.");
-        }
-
-        return contatto;
-    });
+const string FileName = "rubrica.json";
 
 string ChiediParametro(int index, string messaggio)
 {
@@ -34,20 +24,43 @@ string ChiediParametro(int index, string messaggio)
     return input;
 }
 
-string operazione = ChiediParametro(0, "Operazioni disponibili: lista, cerca\nCosa vuoi fare? ");
+string operazione = ChiediParametro(0, "Operazioni disponibili: lista, cerca, nuovo\nCosa vuoi fare? ");
 switch (operazione)
 {
     case "lista":
-        StampaTutti(contatti);
+        StampaTutti(LeggiContatti(FileName));
         break;
 
     case "cerca":
         string query = ChiediParametro(1, "Query: ");
-        StampaFiltrati(contatti, query);
+        StampaFiltrati(LeggiContatti(FileName), query);
+        break;
+
+    case "nuovo":
+        Contatto contatto = new Contatto();
+        contatto.Nome = ChiediParametro(1, "Nome: ");
+        contatto.Cognome = ChiediParametro(2, "Cognome: ");
+        contatto.Numero = ChiediParametro(3, "Numero: ");
+        AggiungiContatto(contatto, FileName);
         break;
 
     default:
         throw new Exception("Comando non valido.");
+}
+
+IEnumerable<Contatto> LeggiContatti(string fileName)
+{
+    return File.ReadLines(fileName)
+        .Select(linea =>
+        {
+            Contatto? contatto = JsonSerializer.Deserialize<Contatto>(linea);
+            if (contatto == null)
+            {
+                throw new Exception("JSON non valido.");
+            }
+
+            return contatto;
+        });
 }
 
 void StampaTutti(IEnumerable<Contatto> contatti)
@@ -64,6 +77,15 @@ void StampaFiltrati(IEnumerable<Contatto> contatti, string query)
         .Where(c => c.Nome.Contains(query) || c.Cognome.Contains(query) || c.Numero.Contains(query));
 
     StampaTutti(filtrati);
+}
+
+void AggiungiContatto(Contatto contatto, string fileName)
+{
+    string json = JsonSerializer.Serialize(contatto);
+
+    File.AppendAllText(fileName, $"\n{json}");
+
+    Console.WriteLine("Contatto aggiunto!");
 }
 
 class Contatto
