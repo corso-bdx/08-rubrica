@@ -2,17 +2,50 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-IEnumerable<string> linee = File.ReadLines("rubrica.json");
+// serialize / serializza   = converti da Classe C# a stringa di testo JSON
+// deserialize/deserializza = converti da stringa di testo JSON a Classe C#
 
-foreach (string linea in linee)
-{
-    Contatto? contatto = JsonSerializer.Deserialize<Contatto>(linea);
-    if (contatto == null)
+IEnumerable<Contatto> contatti = File.ReadLines("rubrica.json")
+    .Select(linea =>
     {
-        throw new Exception("JSON non valido.");
-    }
+        Contatto? contatto = JsonSerializer.Deserialize<Contatto>(linea);
+        if (contatto == null)
+        {
+            throw new Exception("JSON non valido.");
+        }
 
-    Console.WriteLine($"{contatto.Nome} {contatto.Cognome}: {contatto.Numero}");
+        return contatto;
+    });
+
+switch (args[0])
+{
+    case "lista":
+        StampaTutti(contatti);
+        break;
+
+    case "cerca":
+        string query = args[1];
+        StampaFiltrati(contatti, query);
+        break;
+
+    default:
+        throw new Exception("Comando non valido.");
+}
+
+void StampaTutti(IEnumerable<Contatto> contatti)
+{
+    foreach (Contatto contatto in contatti)
+    {
+        Console.WriteLine($"{contatto.Nome} {contatto.Cognome}: {contatto.Numero}");
+    }
+}
+
+void StampaFiltrati(IEnumerable<Contatto> contatti, string query)
+{
+    IEnumerable<Contatto> filtrati = contatti
+        .Where(c => c.Nome.Contains(query) || c.Cognome.Contains(query) || c.Numero.Contains(query));
+
+    StampaTutti(filtrati);
 }
 
 class Contatto
