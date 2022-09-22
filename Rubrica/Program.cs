@@ -17,14 +17,32 @@ IEnumerable<Contatto> contatti = File.ReadLines("rubrica.json")
         return contatto;
     });
 
-switch (args[0])
+string ChiediParametro(int index, string messaggio)
+{
+    if (args.Length > index)
+    {
+        return args[index];
+    }
+
+    Console.Write(messaggio);
+    string? input = Console.ReadLine();
+    if (input == null)
+    {
+        throw new Exception("Nessun input");
+    }
+
+    return input;
+}
+
+string operazione = ChiediParametro(0, "Operazioni disponibili: lista, cerca\nCosa vuoi fare? ");
+switch (operazione)
 {
     case "lista":
         StampaTutti(contatti);
         break;
 
     case "cerca":
-        string query = args[1];
+        string query = ChiediParametro(1, "Query: ");
         StampaFiltrati(contatti, query);
         break;
 
