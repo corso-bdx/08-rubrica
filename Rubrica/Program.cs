@@ -44,23 +44,30 @@ switch (operazione)
         AggiungiContatto(contatto, FileName);
         break;
 
+    case "cancella":
+        string vittima = ChiediParametro(1, "Chi vuoi cancellare? ");
+        CancellaContatto(vittima, FileName);
+        break;
+
     default:
         throw new Exception("Comando non valido.");
+}
+
+Contatto DeserializzaContatto(string json)
+{
+    Contatto? contatto = JsonSerializer.Deserialize<Contatto>(json);
+    if (contatto == null)
+    {
+        throw new Exception("JSON non valido.");
+    }
+
+    return contatto;
 }
 
 IEnumerable<Contatto> LeggiContatti(string fileName)
 {
     return File.ReadLines(fileName)
-        .Select(linea =>
-        {
-            Contatto? contatto = JsonSerializer.Deserialize<Contatto>(linea);
-            if (contatto == null)
-            {
-                throw new Exception("JSON non valido.");
-            }
-
-            return contatto;
-        });
+        .Select(DeserializzaContatto);
 }
 
 void StampaTutti(IEnumerable<Contatto> contatti)
@@ -86,6 +93,42 @@ void AggiungiContatto(Contatto contatto, string fileName)
     File.AppendAllText(fileName, $"\n{json}");
 
     Console.WriteLine("Contatto aggiunto!");
+}
+
+void CancellaContatto(string vittima, string fileName)
+{
+    string[] linee = File.ReadAllLines(fileName);
+
+    List<string> mantenere = new List<string>();
+
+    foreach (string linea in linee)
+    {
+        Contatto c = DeserializzaContatto(linea);
+
+        if (c.Nome.Contains(vittima) || c.Cognome.Contains(vittima) || c.Numero.Contains(vittima))
+            continue;
+
+        mantenere.Add(linea);
+    }
+
+    IEnumerable<Contatto> contattiCancellati = linee.Except(mantenere).Select(DeserializzaContatto);
+
+    if (contattiCancellati.Count() > 1)
+    {
+        Console.WriteLine("Nome ambiguo:");
+        StampaTutti(contattiCancellati);
+    }
+    else if (contattiCancellati.Count() == 1)
+    {
+        Contatto c2 = contattiCancellati.First();
+
+        File.WriteAllLines(fileName, mantenere);
+        Console.WriteLine($"Cancellato {c2.Nome} {c2.Cognome} ({c2.Numero})");
+    }
+    else
+    {
+        Console.WriteLine($"{vittima} non trovato.");
+    }
 }
 
 class Contatto
