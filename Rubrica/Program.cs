@@ -4,14 +4,16 @@ using System.Text.Json.Serialization;
 
 IEnumerable<string> linee = File.ReadLines("rubrica.json");
 
-string primaLinea = linee.First();
-Contatto? contatto = JsonSerializer.Deserialize<Contatto>(primaLinea);
-if (contatto == null)
+foreach (string linea in linee)
 {
-    throw new Exception("JSON non valido.");
-}
+    Contatto? contatto = JsonSerializer.Deserialize<Contatto>(linea);
+    if (contatto == null)
+    {
+        throw new Exception("JSON non valido.");
+    }
 
-Console.WriteLine($"{contatto.Nome} {contatto.Cognome}: {contatto.Numero}");
+    Console.WriteLine($"{contatto.Nome} {contatto.Cognome}: {contatto.Numero}");
+}
 
 class Contatto
 {
