@@ -29,35 +29,43 @@ string ChiediParametro(int index, string messaggio)
     return input;
 }
 
-// Chiede all'utente che operazione vuole esseguire sulla rubrica.
-string operazione = ChiediParametro(0, "Operazioni disponibili: lista, cerca, nuovo, cancella\nCosa vuoi fare? ");
-switch (operazione)
+Dictionary<string, Action> operazioni = new Dictionary<string, Action>()
 {
-    case "lista":
+    ["lista"] = () =>
+    {
         StampaTutti(LeggiContatti(FileName));
-        break;
+    },
 
-    case "cerca":
+    ["cerca"] = () =>
+    {
         string query = ChiediParametro(1, "Query: ");
         StampaFiltrati(LeggiContatti(FileName), query);
-        break;
+    },
 
-    case "nuovo":
+    ["nuovo"] = () =>
+    {
         Contatto contatto = new Contatto();
         contatto.Nome = ChiediParametro(1, "Nome: ");
         contatto.Cognome = ChiediParametro(2, "Cognome: ");
         contatto.Numero = ChiediParametro(3, "Numero: ");
         AggiungiContatto(contatto, FileName);
-        break;
+    },
 
-    case "cancella":
+    ["cancella"] = () =>
+    {
         string vittima = ChiediParametro(1, "Chi vuoi cancellare? ");
         CancellaContatto(vittima, FileName);
-        break;
+    },
+};
 
-    default:
-        throw new Exception("Comando non valido.");
+// Chiede all'utente che operazione vuole esseguire sulla rubrica.
+string operazione = ChiediParametro(0, $"Operazioni disponibili: {string.Join(", ", operazioni.Keys)}\nCosa vuoi fare? ");
+if (!operazioni.TryGetValue(operazione, out Action? action))
+{
+    throw new Exception("Comando non valido.");
 }
+
+action();
 
 // Deserializza un contatto dal JSON.
 Contatto DeserializzaContatto(string json)
